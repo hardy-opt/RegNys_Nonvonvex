@@ -1,0 +1,12 @@
+rho_1 = min(rho_old,c_1*sqrt(g));
+rho_2 = min(e_old,-c_2*min(ev));
+
+1) rho = max(co*sqrt(g),1e-4); % c_1 * |sqrt(g)|
+
+2)  rho = max(min(rho_old,c_1*sqrt(g)),1e-4);
+
+3) rho = max(co*sqrt(g),1e-4) + ct*max(0,-min(eg));
+
+4) rho = max(min(rho_old,c_1*sqrt(g)),1e-4) + ct*max(0,-min(eg));
+
+5) rho = max(min(rho_old,co*sqrt(g)),1e-4)+ c_2*max(0,min(e_old,-min(ev)));

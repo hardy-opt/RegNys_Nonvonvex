@@ -1,0 +1,353 @@
+classdef SVR
+    
+   
+    
+    properties
+       name;    
+        dim;
+        samples;
+        lambda;
+        classes;  
+        hessain_w_independent;
+        d;
+        n_train;
+        n_test;
+        x_train;
+        y_train;
+        x_test;
+        y_test;
+        x_norm;
+        x;  
+    end
+    
+    methods
+        
+        function obj = SVR(x_train,y_train,x_test,y_test,varargin)
+            obj.x_train = x_train;
+            obj.y_train = y_train;
+            obj.x_test = x_test;
+            obj.y_test = y_test;
+            
+            if nargin < 5
+                obj.lambda = 0.001;
+            else
+                obj.lambda = varargin{1};
+            end
+            
+            obj.d = size(obj.x_train,1);
+            obj.n_train = length(y_train);
+            obj.n_test = length(y_test);
+            obj.name = 'SVR';
+            obj.dim = obj.d;
+            obj.samples = obj.n_train;
+            obj.classes = 2;
+            obj.x_norm = sum(obj.x_train.^2,1);
+            obj.x = obj.x_train;
+        end
+        
+        function f = cost(obj,w)
+            
+            A = w'*obj.x_train - obj.y_train;
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            f = sum(2*B./C)/obj.n_train + obj.lambda*(w'*w) / 2;
+  
+            %f = -sum(log(sigmod_result),2)/obj.n_train + obj.lambda * (w'*w) / 2;
+          
+        end
+        
+         function f = cost_batch(obj, w, indices)
+
+            A = w'*obj.x_train(:,indices) - obj.y_train(indices);
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            f = sum(2*B./C)/length(indices) + obj.lambda*(w'*w) / 2;
+
+        end
+        
+        
+        function g = grad(obj,w,ind) 
+            
+            A = w'*obj.x_train(:,ind) - obj.y_train(ind); 
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            g = 16*obj.x_train(:,ind)*(A./C.^2)'/length(ind)+obj.lambda*w;
+    
+        end
+        
+        function g = full_grad(obj,w)
+            
+            g = grad(obj, w, 1:obj.n_train);
+            
+        end
+        
+        function h = hess(obj, w, indices)
+
+            A = w'*obj.x_train(:,indices) - obj.y_train(indices);
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./C.^3;
+            X = obj.x_train(:,indices);
+            h = 16*X.*D*X'/length(indices)+obj.lambda*eye(obj.d); 
+
+        end
+
+        function h = reg_hess(obj, w, indices,ct)
+
+            A = w'*obj.x_train(:,indices) - obj.y_train(indices);
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./C.^3;
+            X = obj.x_train(:,indices);
+            h = 16*X.*D*X'/length(indices);
+            ev = eig(h);
+            h = h + ct*max(0,-min(ev))*eye(size(h))+obj.lambda*eye(obj.d); 
+
+        end
+        
+         function h1 = hess_sqrt(obj, w, indices)
+           
+            X = obj.x_train(:,indices);
+
+            A = w'*obj.x_train(:,indices) - obj.y_train(indices);
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./C.^3;
+            
+            h1 = 4*X.*sqrt(D)/sqrt(length(indices))+sqrt(obj.lambda)*eye(obj.d,length(indices)); 
+            h = hess(obj,w,indices);
+            isequal(h,h1*h1')
+            
+        end
+        
+        function h = full_hess(obj, w)
+
+            h = hess(obj, w, 1:obj.n_train);
+
+        end
+       
+        
+        function hv = hess_vec(obj, w, v, indices)  %%% Hessian - vector multiplication
+
+            X = obj.x_train(:,indices);
+            A = w'*X - obj.y_train(indices);
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./C.^3;
+            
+            Xv = X'*v;
+            Xd = X.*D;
+            hv = 16*Xd*Xv/length(indices)+obj.lambda*v;
+
+        end
+        
+        function hv = fullhess_vec(obj, w, v)   %%% Hessian - vector multiplication
+            
+                
+            hv = hess_vec(obj,w,v,1:obj.n_train);
+
+        end
+        
+        
+        function [H,orta] = hessian_time(obj,w)
+            tic;
+            H = hess(obj,w,1:obj.n_train);
+            orta = toc;
+            
+        end
+        
+
+        
+        %%%%%%% Test cost
+        function f = test_cost(obj,w)
+            
+            A = w'*obj.x_test - obj.y_test;
+            B = A.^2;
+            C = B + 4*ones(size(B));
+            f = sum(2*B./C)/obj.n_test + obj.lambda*(w'*w) / 2;
+            
+        end
+        
+        %%%%%%%
+        function p = prediction(obj, w,D)
+
+            if strcmp(D,'Tr')
+                D = obj.x_train;
+            elseif strcmp(D,'Vl')
+                D = obj.x_test;
+            end
+            p = sigmoid(w' * D);
+
+            class1_idx = p>0.5;
+            class2_idx = p<=0.5;         
+            p(class1_idx) = 1;
+            p(class2_idx) = -1;         
+
+        end
+        
+        
+
+        function a = accuracy(obj, y_pred,D)
+
+            
+            if strcmp(D,'Tr')
+                D = obj.y_train;
+                l = length(D);
+            elseif strcmp(D,'Vl')
+                D = obj.y_test;
+                l = length(D);
+            end
+            a = sum(y_pred == D)/l; 
+
+        end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        
+        
+        function [C,M,e] =  app_hess(obj,w,indices,set,ct)
+
+            % Note that Nystrom Like Approximation is
+            % HS (S' H S)^{1} S' H' = CM^{-1}C'
+
+            % We return the matrices C and M
+
+            l = length(set);
+            set = sort(set);
+            X = obj.x_train(:,indices);
+            A = w'*X - obj.y_train(indices);
+            B = A.^2;
+            F = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./F.^3;
+
+            Xd = (16)*X.*D; % d x n
+            StX = X(set,indices); % m x n
+            
+            C = Xd*StX'/length(indices); % d x m
+            
+            E = C(set,:); % m x m 
+            
+            if issparse(E)
+                E = full(E);
+            end
+            
+            e = eig(E);
+
+            if min(e)<0 
+                M = E + ct*eye(l)*max(0,-min(e)); % ct is c_2 in paper
+            else
+                M = E;
+            end
+
+
+            for i=1:l
+                C(set(i),i) = C(set(i),i)+obj.lambda; % adding lambda
+                M(i,i) = M(i,i) + obj.lambda;
+            end
+            
+            
+            %This is optional and for other way to compute SMW-formula
+            % [U,S,V] = svd(M);
+            %  K = 1./diag(S);
+            %  W = U.*sqrt(K);
+            %  Z = C*W;
+
+            
+         end
+        
+         function [F,g] = Fisher(obj,w,S)
+             [di,m] = size(S);
+             g = zeros(di,1);
+             G = zeros(m,obj.n_train);
+             for i = 1:obj.n_train
+                 gr = grad(obj,w,i);
+                 g = g + gr;
+                 G(:,i) = S'*gr;
+             end
+             F = ((1/obj.n_train)*G)*G';
+             g = (1/obj.n_train)*g;
+         end
+      
+         
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %Computation of C and M for randomized subspace Newton
+        
+         function [M,S] =  randomized_sub(obj,w,indices,set,ct)
+
+            dime = length(w);
+            l = length(set);
+            S = eye(dime);
+            set = sort(set);
+            S = S(set,:);             
+            
+            X = obj.x_train(:,indices);
+            A = w'*X - obj.y_train(indices);
+            B = A.^2;
+            F = B + 4*ones(size(B));
+            D = (4*ones(size(B)) - 3*B)./F.^3;
+
+            Xd = (16/length(indices))*X.*D;
+            
+            SX = S*Xd;
+            
+            SHSt = SX*X'*S';
+
+            E = SHSt;
+
+            if issparse(E)
+
+                E = full(E);
+            end
+            
+            e = eig(E);
+            
+            for i=1:l
+                
+                E(i,i) = E(i,i) + obj.lambda;
+
+            end
+
+            if min(e)<0
+
+                M = E + ct*eye(l)*max(0,-min(e)); % ct is c_2 in paper
+
+            else
+
+                M = E;
+
+            end
+            
+        end
+        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        function w_opt = calc_solution(obj, maxiter, method)
+
+            if nargin < 3
+                method = 'lbfgs';
+            end        
+
+            options.max_iter = maxiter;
+            options.verbose = true;
+            options.tol_optgap = 1.0e-24;
+            options.tol_gnorm = 1.0e-16;
+            options.step_alg = 'backtracking';
+
+            if strcmp(method, 'sd')
+                [w_opt,~] = sd(obj, options);
+            elseif strcmp(method, 'cg')
+                [w_opt,~] = ncg(obj, options);
+            elseif strcmp(method, 'newton')
+                options.sub_mode = 'INEXACT';    
+                options.step_alg = 'non-backtracking'; 
+                [w_opt,~] = newton(obj, options);
+            else 
+                options.step_alg = 'backtracking';  
+                options.mem_size = 5;
+                [w_opt,~] = lbfgs(obj, options);              
+            end
+        end
+        
+    end
+end
