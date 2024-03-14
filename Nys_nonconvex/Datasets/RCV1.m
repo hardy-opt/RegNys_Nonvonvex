@@ -2,6 +2,11 @@ function data = RCV1(seed,reg,ler)
     
     M = load('/home/optima/Desktop/SVRG_library/data/rcv1.mat');
     %data matrix M loads four files (x_train, y_train, x_test, y_test)
+
+    c=randperm(677399,10);
+    M.x_test = M.x_test(c,:);
+    M.y_test = M.y_test(c);
+
 %     M.y_train = M.y_train';
 %      M.y_test = M.y_test(1:2,1);
 % %     M.x_train = M.x_train;

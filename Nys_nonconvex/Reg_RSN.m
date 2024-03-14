@@ -1,4 +1,4 @@
-function [w, infos] = Reg_RSN(problem, in_options,reg,co,ct,set,gamma)
+function [w, infos] = Reg_RSN(problem, in_options,reg,co,ct,mc,gamma)
 
     
     % set dimensions and samples
@@ -71,7 +71,9 @@ function [w, infos] = Reg_RSN(problem, in_options,reg,co,ct,set,gamma)
                     end
                     
           %  step = options.stepsizefun(total_iter, options);    
-            
+            rng(epoch);
+            set = randperm(d,mc);
+
             [rsn,S] =  problem.randomized_sub(w,1:n,set,ct);
 
             % calculate gradient 

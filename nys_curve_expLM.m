@@ -3,7 +3,7 @@ function  nys_curve_expLM(darg,col,e)
     clc;
     close all;
     addpath(genpath(pwd));
-    NUM_RUN = 1;
+    NUM_RUN = 3;
     NUM_EPOCH = e;
     P = 10;  %Partition for DP sampling
     K = 0;  % No. of clusters for DP sampling
@@ -16,20 +16,20 @@ function  nys_curve_expLM(darg,col,e)
     COLS = col;
 
     for s=1:NUM_RUN
-        for reg= [ 1e-5 ] % lambda l_2 regularizer
+        for reg= [ 1e-5] % lambda l_2 regularizer
             for step = [1 ]
                 data = loaddata(s, reg, step, dat);
                 BATCHES = size(data.x_train,2);%add batches with different size ex: [128 256]
-                for c_two = [2 1 ] % c_2 is multiple of negative eigen and it should be > 1
+                for c_two = [2  ] % c_2 is multiple of negative eigen and it should be > 1
 
-                    for m= [2 3 4 5 6] %method from method_vector
+                    for m= [7] %method from method_vector
                         for COL =  COLS
 
                             if COL > size(data.x_train,1)
                                 break;
                             end
 
-                            for c_one= 1%[2 1 0.1 0.01 0.001]
+                            for c_one= [2 1 ]% 0.01 0.001]
                                 %rng(s); % do not remove 
                                 %disp([m, method{m}])
                                 options.batch_size = size(data.x_train,2);
@@ -44,45 +44,45 @@ function  nys_curve_expLM(darg,col,e)
                                 options.column = COL;
                                 options.partitions = P;
                                 options.clusters = K;
-                                set = sort(randperm(length(data.w_init'),col));
+                                mc = col;
                                 Name = sprintf('%s/K%d_B%d_%s_%.1e_reg_%.1e_ctwo_%.1e_cone_%.1e_run_%d.mat',dat, COL, BATCH_SIZE, method{m},options.step_init,reg, c_two, c_one,s);
                                 
                                 if m==1
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = Reg_RSN(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = Reg_RSN(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');
                                     
 
                                 elseif m==2
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = RNYSA(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = RNYSA(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');
                                     
 
                                 elseif m==3 
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = RNYSB(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = RNYSB(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');
 
                                 elseif m==4
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = RNYSC(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = RNYSC(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');  
                                 
                                 elseif m==5
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = RNYSD(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = RNYSD(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');  
 
                                 elseif m==6
 
                                         gamma = 0.5;
-                                        [w_s1, info_s1] = RNYSE(problem, options,reg,c_one,c_two,set,gamma);  
+                                        [w_s1, info_s1] = RNYSE(problem, options,reg,c_one,c_two,mc,gamma);  
                                         save(Name,'info_s1');  
                                     
                                 elseif m==7
@@ -106,7 +106,7 @@ function  nys_curve_expLM(darg,col,e)
                         break;
                     end
 
-                    for m=[]% [8 9]
+                    for m = [ ] %9
                         
                         fprintf('%s - Reg:%f - Step:%f  - Run:%d\n', omethod{m}, reg, step, s);
                         options.max_epoch=NUM_EPOCH;    

@@ -230,8 +230,14 @@ classdef SVR
             if issparse(E)
                 E = full(E);
             end
-            
-            e = eig(E);
+
+            if issymmetric(E)
+                e = eig(E);
+            else
+                
+                e = eig((E+E')/2);
+            end
+
 
             if min(e)<0 
                 M = E + ct*eye(l)*max(0,-min(e)); % ct is c_2 in paper
@@ -299,7 +305,11 @@ classdef SVR
                 E = full(E);
             end
             
-            e = eig(E);
+            if issymmetric(E)
+                e = eig(E);
+            else
+                e = eig((E+E')/2);
+            end
             
             for i=1:l
                 

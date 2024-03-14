@@ -1,4 +1,4 @@
-function [w, infos] = RNYSA(problem, in_options,reg,co,ct,set,gamma)
+function [w, infos] = RNYSA(problem, in_options,reg,co,ct,mc,gamma)
 
     
     % set dimensions and samples
@@ -67,7 +67,8 @@ function [w, infos] = RNYSA(problem, in_options,reg,co,ct,set,gamma)
                     if any(isnan(f_val)) || any(isinf(f_val)) || any(isnan(w0)) || any(isinf(w0))
                     return;
                     end
-                    
+            rng(epoch);
+            set = randperm(d,mc);
 
                         [Z,M,eg] = problem.app_hess(w0,1:n,set,ct);
 
@@ -94,6 +95,7 @@ function [w, infos] = RNYSA(problem, in_options,reg,co,ct,set,gamma)
                         Q = Z/(M+nfg*(Z'*Z));
 
           %  step = options.stepsizefun(total_iter, options);    
+
             
             % calculate gradient 
             ro = 1/2; %alpha in paper
@@ -111,7 +113,7 @@ function [w, infos] = RNYSA(problem, in_options,reg,co,ct,set,gamma)
                      w = w - v;
                         
             total_iter = total_iter + 1;
-        
+
         
         
         % measure elapsed time

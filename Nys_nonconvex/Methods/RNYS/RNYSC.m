@@ -1,4 +1,4 @@
-function [w, infos] = RNYSC(problem, in_options,reg,co,ct,set,gamma)
+function [w, infos] = RNYSC(problem, in_options,reg,co,ct,mc,gamma)
 
     
     % set dimensions and samples
@@ -67,7 +67,8 @@ function [w, infos] = RNYSC(problem, in_options,reg,co,ct,set,gamma)
                     if any(isnan(f_val)) || any(isinf(f_val)) || any(isnan(w0)) || any(isinf(w0))
                     return;
                     end
-                    
+                        rng(epoch);
+                        set = randperm(d,mc);
 
                         [Z,M,eg] = problem.app_hess(w0,1:n,set,ct);
 

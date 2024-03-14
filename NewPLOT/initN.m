@@ -220,7 +220,7 @@ function [methods] = initN(lw, ms, lambdas, etas, c_twos, RUNS, EPOCHS, COL, BS,
     params.c_ones = c_ones;
     methods(params.name)=params;
 
-    params.name = 'RNM-GS'; % Regularized Newton Method gamma square root
+    params.name = 'RNM-GO'; % Regularized Newton Method gamma square root
     params.line = '-.';
     params.linewidth = lw;
     params.linecolor = [0. 0. 0.];
@@ -237,7 +237,7 @@ function [methods] = initN(lw, ms, lambdas, etas, c_twos, RUNS, EPOCHS, COL, BS,
     params.c_ones = c_ones;
     methods(params.name)=params;
     
-    params.name = 'RNM-GO'; % Regularized Newton Method gamma one
+    params.name = 'RNM-GS'; % Regularized Newton Method gamma one
     params.line = '-.';
     params.linewidth = lw;
     params.linecolor = [0. 0.6 0.7];

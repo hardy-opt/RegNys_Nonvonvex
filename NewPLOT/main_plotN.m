@@ -1,15 +1,22 @@
 function [] = main_plotN()
     close all;
     
-    d =6; %dataet number from followimg list
+    d =1; %dataet % 5 =Adult, 1= Realsim, 6 = W8A, 8=Gisette
+    yp = 1;
+    xp = 1;
+    % yparams = {'cost', 'val_cost', 'acc_tr', 'acc_val','gnorm'};
+    % xparams = {'time', 'epoch'};
+    % plot_params.sort = yparams{1};
+    % plot_params.y = yparams{1};
+    % plot_params.x = xparams{1}; 
 
     % Markers = {'o','+','*','.','x','_','|','square','diamond','^','v','>','<','pentagram' }
     % To change X and Y axis properties GOTO LINE 44
     % To change dataset : Go to line 65
     %Relativer error LINE 219
 
-    RUNS = 1;
-    EPOCHS = 50;
+    RUNS = 3;
+    EPOCHS = 0;
     lambdas = 1e-5;% 1e-2 1e-4];
 
     etas = [ 1 1e-1 0.01 0.001];%
@@ -19,19 +26,23 @@ function [] = main_plotN()
     c_ones = [2 1 0.1 0.01 0.001];
 
     if d== 5 % ADULT
-        COLS = 15;
+        COLS = 30;%30;
         BSS = 32561;
-        EPOCHS = 50;
+        EPOCHS = 100;
 
     elseif d==8 % GISETTE
-        COLS = 50;
+        COLS = 250;
         BSS = 6000;
-        EPOCHS = 50;
+        EPOCHS = 20;
     elseif d==6 % W8A
         COLS = 30;
         BSS = 49749;
-        EPOCHS = 50;
+        EPOCHS = 30;
 
+    elseif d == 1 % realsim
+        COLS = 500;
+        BSS = 57848;
+        EPOCHS = 20;
     end
 
     path = 'Nonconvex_result_Jan24/RSN/';
@@ -62,15 +73,15 @@ params('RNM-GS')
 params('RNM-GO')
 params('RS-RNM-GS')
 params('RS-RNM-GO')
-params('RNYS-GS')
-params('RNYS-GO')
+%params('RNYS-GS')
+%params('RNYS-GO')
 params('RNYS-GSA')
 params('RNYS-GSB') % complex
-params('RNYS-GSC')
-params('RNYS-GSD')
-params('RNYS-GSE')
+%params('RNYS-GSC')
+%params('RNYS-GSD')
+%params('RNYS-GSE')
 params('GD')
-params('LBFGS')
+%params('LBFGS')
 
 
         };
@@ -78,8 +89,8 @@ params('LBFGS')
     yparams = {'cost', 'val_cost', 'acc_tr', 'acc_val','gnorm'};
     xparams = {'time', 'epoch'};
     plot_params.sort = yparams{1};
-    plot_params.y = yparams{1};
-    plot_params.x = xparams{2};
+    plot_params.y = yparams{yp};
+    plot_params.x = xparams{xp};
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,9 +176,9 @@ function plot_method_lambda(dataset, sparams, lambda, plot_params, ref)
             if bestc_two == -1
                 displayname=strcat(strrep(sparams{m}.name, '_', '-'), ' (\eta=', sprintf('10^{%0.0f})',log10(besteta)));
             elseif bestc_two == 0
-                displayname=strcat(strrep(sparams{m}.name, '_', '-'), ' (\eta=', sprintf('10^{%0.0f},',log10(besteta)),' \c_two=\mid\midZ\mid\mid_{F})');
+                displayname=strcat(strrep(sparams{m}.name, '_', '-'), ' (\eta=', sprintf('10^{%0.0f},',log10(besteta)),' c_2=\mid\midZ\mid\mid_{F})');
             else
-                displayname=strcat(strrep(sparams{m}.name, '_', '-'), ' (\eta=', sprintf('10^{%0.0f},',log10(besteta)),' \c_two=', sprintf('10^{%0.0f},', log10(bestc_two)),' \c_one=', sprintf('10^{%0.0f})', log10(bestc_one)));
+                displayname=strcat(strrep(sparams{m}.name, '_', '-'), ' (\eta=', sprintf('10^{%0.0f},',log10(besteta)),' c_2=', sprintf('{%0.1f},', (bestc_two)),' c_1=', sprintf('{%0.1f})', (bestc_one)));
             end
             if strcmp(plot_params.y, 'cost') || strcmp(plot_params.y, 'val_cost') || strcmp(plot_params.y,'gnorm')
                 [~, idx] = min(y);
@@ -190,12 +201,12 @@ function plot_method_lambda(dataset, sparams, lambda, plot_params, ref)
             end
             idx=length(y);
             if length(sparams)==1
-                displayname = strcat(displayname, '@\lambda=', sprintf('10^{%0.0f})', log10(lambda)));
-               % errorbar(x(1:5:idx), y(1:5:idx), s(1:5:idx), 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
-                plot(x(1:idx), y(1:idx), 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
+               displayname = strcat(displayname, '@\lambda=', sprintf('10^{%0.0f})', log10(lambda)));
+               errorbar(x(1:5:idx), y(1:5:idx), s(1:5:idx), 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
+               %plot(x(1:idx), y(1:idx), 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
             else
-               %errorbar(x(1:5:idx), y(1:5:idx), s(1:5:idx), 'linestyle', sparams{m}.line, 'color', sparams{m}.linecolor, 'Marker', sparams{m}.marker, 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
-                plot(x(1:1:idx), y(1:1:idx), 'linestyle', sparams{m}.line, 'color', sparams{m}.linecolor, 'Marker', sparams{m}.marker, 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname, 'MarkerIndices', 1:1:idx);
+               errorbar(x(1:5:idx), y(1:5:idx), s(1:5:idx), 'linestyle', sparams{m}.line, 'color', sparams{m}.linecolor, 'Marker', sparams{m}.marker, 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname);
+                %plot(x(1:1:idx), y(1:1:idx), 'linestyle', sparams{m}.line, 'color', sparams{m}.linecolor, 'Marker', sparams{m}.marker, 'markersize', sparams{m}.markersize, 'linewidth', sparams{m}.linewidth, 'MarkerFaceColor', sparams{m}.facecolor, 'displayname', displayname, 'MarkerIndices', 1:1:idx);
             end
         end
     end
